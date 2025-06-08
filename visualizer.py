@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import random
 from color_functions import *
+from random_events import random_event_choice
 
 # helper function that mixes colors in graph
 def iterate_helper(graph, influence_change_range):
@@ -34,7 +35,7 @@ def iterate_helper(graph, influence_change_range):
         graph.nodes[node]['influence'] = new_influence[node]
     
 
-def visualize_graph(graph, pos, iterations, influence_change_range):
+def visualize_graph(graph, pos, iterations, influence_change_range, event_skip):
     print("Visualizing graph!")
     
     fig = plt.gcf()
@@ -58,4 +59,7 @@ def visualize_graph(graph, pos, iterations, influence_change_range):
         
         plt.pause(1.5)
         iterate_helper(graph, influence_change_range)
+        if i % event_skip==1:
+            print(f"Random event time! On step {i+1}")
+            graph, pos = random_event_choice(graph, pos, 1)
     plt.show()
