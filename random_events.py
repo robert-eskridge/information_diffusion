@@ -2,7 +2,9 @@ import random
 import networkx as nx
 from color_functions import *
 
+# PROGRAM CONSTANTS
 AFFECTED_NODE_PERCENTAGE = 0.125
+INVADER_INFLUENCE_CAP = 150
 
 # random events:
 # 1: INVASION!: 1/8 of total nodes are added to the graph, with very high influence and random placement
@@ -13,7 +15,7 @@ AFFECTED_NODE_PERCENTAGE = 0.125
 
 def random_event_choice(graph, pos, event):
     if event==1:
-        graph, pos = invasion(graph, pos)
+        graph, pos = invasion_capped(graph, pos)
     if event==2:
         plague(graph)
     if event==3:
@@ -29,13 +31,55 @@ def invasion(graph, pos):
     hex_invaders = encode_to_hex(rgb)
     
     for i in range(num_invader_nodes):
-        random_node = len(nodes)+i+1
-        graph.add_node(random_node)
-        graph.nodes[random_node]["hex_code"] = hex_invaders
-        graph.nodes[random_node]["influence"] = 99
+        invader_node = len(nodes)+i+1
+        graph.add_node(invader_node)
+        graph.nodes[invader_node]["hex_code"] = hex_invaders
+        graph.nodes[invader_node]["influence"] = 99
         invaded_one, invaded_two = random.choice(list(graph.edges))
-        graph.add_edge(random_node, invaded_one, weight=0.95, invader = True)
-        graph.add_edge(random_node, invaded_two, weight=0.95, invader = True)
+        graph.add_edge(invader_node, invaded_one, weight=0.95, invader = True)
+        graph.add_edge(invader_node, invaded_two, weight=0.95, invader = True)
+    new_pos = nx.spring_layout(graph, pos=pos, fixed=pos.keys())
+    return graph, new_pos
+
+def invasion_capped(graph, pos):
+    print("Invasion!")
+    nodes = list(graph.nodes)
+    num_invader_nodes = int(AFFECTED_NODE_PERCENTAGE*len(nodes))
+    rgb = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+    hex_invaders = encode_to_hex(rgb)
+
+    all_influence = nx.get_node_attributes(graph, "influence")
+    average_influence = int(sum(all_influence))
+
+    for i in range(num_invader_nodes):
+        invader_id = max(graph.nodes, default=-1)+1
+        graph.add_node(invader_id)
+        print(f"Invader id: {invader_id}")
+        graph.nodes[invader_id]["hex_code"] = hex_invaders
+        graph.nodes[invader_id]["influence"] = average_influence*2
+        graph.nodes[invader_id]["invader"] = True
+
+        remaining_budget = average_influence*1.5
+
+        # Sort potential targets by cost (influence), ascending
+        potential_targets = sorted(
+            [n for n in graph.nodes if n != invader_id and not graph.has_edge(invader_id, n)],
+            key=lambda n: graph.nodes[n]["influence"]
+        )
+
+        if random.uniform(-.25,1) < 0:
+            print("Idiot invaders!")
+            potential_targets.reverse()
+            print(f"First three targets: {potential_targets[:3]}")
+
+        for target in potential_targets:
+            target_cost = graph.nodes[target]["influence"]
+            if target_cost <= remaining_budget:
+                graph.add_edge(invader_id, target, weight=0.95, invader=True)
+                print(f"Invaded {target} with influence cost {target_cost}!")
+                remaining_budget -= target_cost
+            if remaining_budget <= 0:
+                break
     new_pos = nx.spring_layout(graph, pos=pos, fixed=pos.keys())
     return graph, new_pos
 

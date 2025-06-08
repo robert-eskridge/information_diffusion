@@ -10,7 +10,7 @@ INFLUENCE_MINIMUM = 5
 # helper function to kill dead nodes under a certain influence threshold
 def murder_machine(graph, pos):
     to_remove = []
-    for node in graph.nodes:
+    for node in list(graph.nodes):
         if graph.nodes[node]["influence"]<INFLUENCE_MINIMUM:
             neighbors = list(graph[node])
             if neighbors:
@@ -42,8 +42,7 @@ def steal_influence(graph, node):
 def MCS_influence_change(graph):
     for _, data in graph.nodes(data = True):
         if data.get("MCS") == True:
-            print(f"Node with MCS: {_}")
-            data["influence"] *= random.uniform(1.15, 1.5)
+            data["influence"] *= random.uniform(1.15, 1.4)
 
 # helper function that mixes colors in graph
 def iterate_helper(graph, influence_change_range, weight_change_range):
@@ -65,10 +64,15 @@ def iterate_helper(graph, influence_change_range, weight_change_range):
         
         # mix the colors of the neighbors and their normalized weights
         new_colors[node] = mix_colors(all_colors, normalized_weights)
+        
         # Apply small influence change (multiplicative drift)
+        THRESHOLD= 100
         current_influence = graph.nodes[node]["influence"]
-        drift = 1 + random.uniform(-influence_change_range, influence_change_range)  # e.g. ±5%
-        updated_influence = current_influence * drift  
+        growth_factor = 1 + random.uniform(-influence_change_range, influence_change_range)
+        # Diminishing growth: scale drift down based on current influence
+        damping = 1 / (1 + (current_influence / THRESHOLD))  # between 0 and 1
+        adjusted_drift = 1 + (growth_factor - 1) * damping
+        updated_influence = current_influence*adjusted_drift
         new_influence[node] = updated_influence
     
     # update the color and influence of the nodes
@@ -117,7 +121,7 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
             # running random event is intentionally after iterate_helper to give a chance to visualize changes
             print(f"Random event time! On step {i+1}")
             nx.set_node_attributes(graph, False, "MCS") # reset MCS
-            graph, pos = random_event_choice(graph, pos, random.choice([1,3]))
-            #graph, pos = random_event_choice(graph, pos, 3)
+            #graph, pos = random_event_choice(graph, pos, random.choice([1,3]))
+            graph, pos = random_event_choice(graph, pos, 1)
         plt.pause(1.5)
     plt.show()
