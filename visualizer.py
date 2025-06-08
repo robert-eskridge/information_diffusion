@@ -4,6 +4,28 @@ import random
 from color_functions import *
 from random_events import random_event_choice
 
+# PROGRAM CONSTANTS
+INFLUENCE_MINIMUM = 5
+
+# helper function to kill dead nodes under a certain influence threshold
+def murder_machine(graph, pos):
+    to_remove = []
+    for node in graph.nodes:
+        if graph.nodes[node]["influence"]<INFLUENCE_MINIMUM:
+            neighbors = list(graph[node])
+            if neighbors:
+                for i in range(len(neighbors)):
+                    for j in range (i+1, len(neighbors)):
+                        u, v = neighbors[i], neighbors[j]
+                        if not graph.has_edge(u, v):
+                            average_weight = (graph.get_edge_data(node, neighbors[i])["weight"] + graph.get_edge_data(node, neighbors[j])["weight"])/2
+                            graph.add_edge(u, v, weight=round(average_weight, 3))
+            to_remove.append(node)
+    graph.remove_nodes_from(to_remove)
+    print(f"Murdered nodes: {to_remove}")
+    pos = nx.spring_layout(graph, pos=pos, fixed=graph.nodes)
+    return pos
+
 # helper function that mixes colors in graph
 def iterate_helper(graph, influence_change_range, weight_change_range):
     new_colors = {}
@@ -67,6 +89,7 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
         nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
         
         iterate_helper(graph, influence_change_range, weight_change_range)
+        pos = murder_machine(graph, pos)
         
         if i % event_skip==1: 
             # running random event is intentionally after iterate_helper to give a chance to visualize changes
