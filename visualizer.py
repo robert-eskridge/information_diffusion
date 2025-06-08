@@ -55,7 +55,7 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
         plt.title(f"Step {i+1} in graph iteration.")
         node_color_dict = nx.get_node_attributes(graph, "hex_code")
         node_influence_dict = nx.get_node_attributes(graph, "influence")
-        print(f"Influence on step {i+1}: {node_influence_dict}")
+        #print(f"Influence on step {i+1}: {node_influence_dict}")
         
         node_color = [node_color_dict[node] for node in graph.nodes()]
         node_size = [node_influence_dict[node]*15 for node in graph.nodes()]
@@ -71,6 +71,7 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
         if i % event_skip==1: 
             # running random event is intentionally after iterate_helper to give a chance to visualize changes
             print(f"Random event time! On step {i+1}")
-            graph, pos = random_event_choice(graph, pos, 1)
+            graph, pos = random_event_choice(graph, pos, random.choice([1,2]))
+            #graph, pos = random_event_choice(graph, pos, 2)
         plt.pause(1.5)
     plt.show()

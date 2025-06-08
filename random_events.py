@@ -14,9 +14,13 @@ AFFECTED_NODE_PERCENTAGE = 0.125
 def random_event_choice(graph, pos, event):
     if event==1:
         graph, pos = invasion(graph, pos)
+    if event==2:
+        plague(graph)
     return graph, pos
 
+#TODO give invaders an influence value they can conquer and choose a random grouping of neighbord under that value
 def invasion(graph, pos):
+    print("Invasion!")
     nodes = list(graph.nodes)
     num_random_nodes = int(AFFECTED_NODE_PERCENTAGE*len(nodes))
     rgb = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
@@ -32,3 +36,12 @@ def invasion(graph, pos):
         graph.add_edge(random_node, invaded_two, weight=0.95, invader = True)
     new_pos = nx.spring_layout(graph, pos=pos, fixed=pos.keys())
     return graph, new_pos
+
+#TODO kill tiny nodes
+def plague(graph):
+    print("Plague!")
+    for node in graph.nodes:
+        current_influence = graph.nodes[node]["influence"]
+        drift = 1 + random.uniform(-.75, -.25)  # e.g. ±5%
+        updated_influence = max(1, min(current_influence * drift, 100))  # Clamp between 1 and 100
+        graph.nodes[node]["influence"] = updated_influence

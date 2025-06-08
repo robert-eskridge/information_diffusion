@@ -64,5 +64,6 @@ def main():
     assign_hex_values(G)
     visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, WEIGHT_CHANGE_RANGE, EVENT_SKIPS)
     
-# TODO add random events every XONSTANT iteration
+# TODO add more random events
+# TODO make it so nodes can be killed, forming new edges between their neighbors
 main()
