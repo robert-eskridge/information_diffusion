@@ -16,17 +16,19 @@ def random_event_choice(graph, pos, event):
         graph, pos = invasion(graph, pos)
     if event==2:
         plague(graph)
+    if event==3:
+        main_character_syndrome(graph)
     return graph, pos
 
 #TODO give invaders an influence value they can conquer and choose a random grouping of neighbord under that value
 def invasion(graph, pos):
     print("Invasion!")
     nodes = list(graph.nodes)
-    num_random_nodes = int(AFFECTED_NODE_PERCENTAGE*len(nodes))
+    num_invader_nodes = int(AFFECTED_NODE_PERCENTAGE*len(nodes))
     rgb = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
     hex_invaders = encode_to_hex(rgb)
     
-    for i in range(num_random_nodes):
+    for i in range(num_invader_nodes):
         random_node = len(nodes)+i+1
         graph.add_node(random_node)
         graph.nodes[random_node]["hex_code"] = hex_invaders
@@ -37,11 +39,20 @@ def invasion(graph, pos):
     new_pos = nx.spring_layout(graph, pos=pos, fixed=pos.keys())
     return graph, new_pos
 
-#TODO kill tiny nodes
 def plague(graph):
     print("Plague!")
     for node in graph.nodes:
         current_influence = graph.nodes[node]["influence"]
         drift = 1 + random.uniform(-.75, -.25)  # e.g. ±5%
-        updated_influence = max(1, min(current_influence * drift, 100))  # Clamp between 1 and 100
+        updated_influence = current_influence * drift
         graph.nodes[node]["influence"] = updated_influence
+
+def main_character_syndrome(graph):
+    nodes = list(graph.nodes)
+    num_MCS_nodes = int(AFFECTED_NODE_PERCENTAGE * len(nodes))
+    MCS_nodes = random.sample(nodes, min(num_MCS_nodes, len(nodes)))
+
+    mcs_attributes = {node: True for node in MCS_nodes}
+    nx.set_node_attributes(graph, mcs_attributes, "MCS")
+
+    print(f"🌟 MCS applied to nodes: {MCS_nodes}")

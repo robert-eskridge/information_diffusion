@@ -20,11 +20,30 @@ def murder_machine(graph, pos):
                         if not graph.has_edge(u, v):
                             average_weight = (graph.get_edge_data(node, neighbors[i])["weight"] + graph.get_edge_data(node, neighbors[j])["weight"])/2
                             graph.add_edge(u, v, weight=round(average_weight, 3))
+                            
+                dead_influence = graph.nodes[node]["influence"]
+                weights = [random.random() for _ in neighbors]  # Random weights
+                total = sum(weights)
+                proportions = [w / total for w in weights]      # Normalize
+
+                for neighbor, share in zip(neighbors, proportions):
+                    gain = share * dead_influence
+                    graph.nodes[neighbor]["influence"] += gain
+                    
             to_remove.append(node)
     graph.remove_nodes_from(to_remove)
-    print(f"Murdered nodes: {to_remove}")
     pos = nx.spring_layout(graph, pos=pos, fixed=graph.nodes)
     return pos
+
+def steal_influence(graph, node):
+    neighbors = graph[node]
+
+# function specifically for MCS nodes to make their influence bigger for the MCS event duration
+def MCS_influence_change(graph):
+    for _, data in graph.nodes(data = True):
+        if data.get("MCS") == True:
+            print(f"Node with MCS: {_}")
+            data["influence"] *= random.uniform(1.15, 1.5)
 
 # helper function that mixes colors in graph
 def iterate_helper(graph, influence_change_range, weight_change_range):
@@ -49,9 +68,10 @@ def iterate_helper(graph, influence_change_range, weight_change_range):
         # Apply small influence change (multiplicative drift)
         current_influence = graph.nodes[node]["influence"]
         drift = 1 + random.uniform(-influence_change_range, influence_change_range)  # e.g. ±5%
-        updated_influence = max(1, min(current_influence * drift, 100))  # Clamp between 1 and 100
+        updated_influence = current_influence * drift  
         new_influence[node] = updated_influence
     
+    # update the color and influence of the nodes
     for node, new_color in new_colors.items():
         graph.nodes[node]['hex_code'] = new_color
         graph.nodes[node]['influence'] = new_influence[node]
@@ -59,11 +79,12 @@ def iterate_helper(graph, influence_change_range, weight_change_range):
     all_weights = [data["weight"] for _, _, data in graph.edges(data=True)]
     average_weight = sum(all_weights) / len(graph.edges)
     
+    # update the weights randomly
     for _, _, data in graph.edges(data=True):
         if data.get("invader")==True and data["weight"] > average_weight+0.1:
             data["weight"] *= random.uniform(0.6, 0.8)
         drift = 1 + random.uniform(-weight_change_range, weight_change_range)
-        data["weight"] = round(max(0.01, min(data["weight"] * drift, 100)), 3)
+        data["weight"] = round(max(0.01, data["weight"] * drift), 3)
     
 
 def visualize_graph(graph, pos, iterations, influence_change_range, weight_change_range, event_skip):
@@ -89,12 +110,14 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
         nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
         
         iterate_helper(graph, influence_change_range, weight_change_range)
+        MCS_influence_change(graph)
         pos = murder_machine(graph, pos)
         
         if i % event_skip==1: 
             # running random event is intentionally after iterate_helper to give a chance to visualize changes
             print(f"Random event time! On step {i+1}")
-            graph, pos = random_event_choice(graph, pos, random.choice([1,2]))
-            #graph, pos = random_event_choice(graph, pos, 2)
+            nx.set_node_attributes(graph, False, "MCS") # reset MCS
+            graph, pos = random_event_choice(graph, pos, random.choice([1,3]))
+            #graph, pos = random_event_choice(graph, pos, 3)
         plt.pause(1.5)
     plt.show()

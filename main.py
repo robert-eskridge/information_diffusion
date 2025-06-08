@@ -48,7 +48,7 @@ def assign_hex_values(graph):
 def assign_influence(graph):
     values = {}
     for node in graph.nodes:
-        influence =random.randint(0,100)
+        influence =random.randint(0,150)
         values[node] = influence
     nx.set_node_attributes(graph, values, "influence")
     print(f"Values for influence: {values}")
