@@ -1,12 +1,14 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
-import time
+from color_functions import *
+from visualizer import *
 
 # PROGRAM CONSTANTS
-NUM_NODES = 10 # how many nodes to create in the graph
+NUM_NODES = 16 # how many nodes to create in the graph
+SMALL_WORLD_NEIGHBORS = 3
 EDGE_PROBABILITY = 0.10 # probability of an edge between nodes in random graph
-NUM_ITERATIONS = 3 # number of iterations of color mixing to undergo
+NUM_ITERATIONS = 15 # number of iterations of color mixing to undergo
 
 # function that creates a random weighted graph
 def create_weighted_connected_random():
@@ -16,29 +18,19 @@ def create_weighted_connected_random():
         G = nx.erdos_renyi_graph(NUM_NODES, EDGE_PROBABILITY)
         print("Iterated through another graph")
     nx.set_edge_attributes(G, {e: {'weight': round(random.random(), 3)} for e in G.edges})
-    pos = nx.circular_layout(G) # this keeps the graph stationary while iterating in animation
+    pos = nx.spring_layout(G) # this keeps the graph stationary while iterating in animation
     return G, pos
 
-def weight_to_gray(weight):
-    gray_level = int((1 - weight) * 255) #invert weight where 1 is black and 0 is white
-    return f'#{gray_level:02x}{gray_level:02x}{gray_level:02x}'
+def create_small_world_graph():
+    G = nx.watts_strogatz_graph(NUM_NODES, SMALL_WORLD_NEIGHBORS, EDGE_PROBABILITY)
 
-# helper function encoding a tuple in format (r,g,b) to hex value
-def encode_to_hex(rgb):
-    return "#{:02x}{:02x}{:02x}".format(*rgb)
-
-# helper function decoding hex in format #ffffff to rgb tuple
-def decode_from_hex(hex):
-    return tuple(int(hex[i:i+2], 16) for i in (1,3,5))
-
-# helper function that mixes colors based on weights. colors is a list of color tuples. 
-# weights is a list of weights adding to 1. Use this to mix colors of neighboring nodes, normalizing their influence
-# against each other to get a value of 1.
-def mix_colors(colors, weights):
-    r = sum(c[0] * w for c, w in zip(colors, weights))
-    g = sum(c[1] * w for c, w in zip(colors, weights))
-    b = sum(c[2] * w for c, w in zip(colors, weights))
-    return encode_to_hex((int(r), int(g), int(b)))
+    while not nx.is_connected(G):
+        G = nx.watts_strogatz_graph(NUM_NODES, SMALL_WORLD_NEIGHBORS, EDGE_PROBABILITY)
+        print("Iterated through another graph")
+    
+    nx.set_edge_attributes(G, {e: {'weight': round(random.uniform(0.1, 1.0), 3)} for e in G.edges})
+    pos = nx.spring_layout(G)
+    return G, pos
 
 # function that assigns random hex code RGB values to every node in the graph
 def assign_hex_values(graph):
@@ -58,54 +50,15 @@ def assign_influence(graph):
     nx.set_node_attributes(graph, values, "influence")
     print(f"Values for influence: {values}")
 
-# helper function that mixes colors in graph
-def iterate_helper(graph):
-    new_colors = {}
-    for node in graph.nodes:
-        neighbors = graph[node]
-        if not neighbors:
-            continue
-        # Grab all the influences and colors of the neighbors
-        all_influences = [graph.nodes[n]["influence"]*graph[node][n]["weight"] for n in neighbors]
-        all_influences.append(graph.nodes[node]["influence"])
-        all_colors = [decode_from_hex(graph.nodes[n]["hex_code"]) for n in neighbors]
-        all_colors.append(decode_from_hex(graph.nodes[node]["hex_code"]))
-        # sum and normalize influence
-        total_weights = sum(all_influences)
-        normalized_weights = [inf / total_weights for inf in all_influences]
-        print(f"Normalized Weights for node {node}: {normalized_weights}")
-        # mix the colors of the neighbors and their normalized weights
-        new_colors[node] = mix_colors(all_colors, normalized_weights)
-    print(f"All colors: {nx.get_node_attributes(graph, "hex_code")}")
-    for node, new_color in new_colors.items():
-        graph.nodes[node]['hex_code'] = new_color
-    print(f"New colors: {nx.get_node_attributes(graph, "hex_code")}")
-
-def visualize_graph(graph, pos):
-    print("Visualizing graph!")
-    for i in range(NUM_ITERATIONS):
-        plt.clf()
-        plt.title(f"Step {i+1} in graph iteration.")
-        node_color_dict = nx.get_node_attributes(graph, "hex_code")
-        node_influence_dict = nx.get_node_attributes(graph, "influence")
-        
-        node_color = [node_color_dict[node] for node in graph.nodes()]
-        node_size = [node_influence_dict[node]*15 for node in graph.nodes()]
-        
-        edge_labels = nx.get_edge_attributes(graph, "weight")
-        edge_colors = [weight_to_gray(edge_labels.get(edge, 0)) for edge in graph.edges()]
-        
-        nx.draw(graph, pos, with_labels=True, node_color=node_color, node_size=node_size, edge_color=edge_colors)
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
-        
-        plt.pause(1)
-        time.sleep(1.5)
-        iterate_helper(graph)
-    plt.show()
-
-
-G, pos = create_weighted_connected_random()
-print(f"Nodes in graph: {G.nodes}")
-assign_influence(G)
-assign_hex_values(G)
-visualize_graph(G, pos)
+def main():
+    selection = int(input("1: erdos renyi \n2: small world\n"))
+    if selection==1:   
+        G, pos = create_weighted_connected_random()
+    elif selection==2:
+        G, pos = create_small_world_graph()
+    print(f"Nodes in graph: {G.nodes}")
+    assign_influence(G)
+    assign_hex_values(G)
+    visualize_graph(G, pos, NUM_ITERATIONS)
+    
+main()
