@@ -5,7 +5,7 @@ from color_functions import *
 from random_events import random_event_choice
 
 # helper function that mixes colors in graph
-def iterate_helper(graph, influence_change_range):
+def iterate_helper(graph, influence_change_range, weight_change_range):
     new_colors = {}
     new_influence = {}
     for node in graph.nodes:
@@ -34,8 +34,17 @@ def iterate_helper(graph, influence_change_range):
         graph.nodes[node]['hex_code'] = new_color
         graph.nodes[node]['influence'] = new_influence[node]
     
+    all_weights = [data["weight"] for _, _, data in graph.edges(data=True)]
+    average_weight = sum(all_weights) / len(graph.edges)
+    
+    for _, _, data in graph.edges(data=True):
+        if data.get("invader")==True and data["weight"] > average_weight+0.1:
+            data["weight"] *= random.uniform(0.6, 0.8)
+        drift = 1 + random.uniform(-weight_change_range, weight_change_range)
+        data["weight"] = round(max(0.01, min(data["weight"] * drift, 100)), 3)
+    
 
-def visualize_graph(graph, pos, iterations, influence_change_range, event_skip):
+def visualize_graph(graph, pos, iterations, influence_change_range, weight_change_range, event_skip):
     print("Visualizing graph!")
     
     fig = plt.gcf()
@@ -57,9 +66,11 @@ def visualize_graph(graph, pos, iterations, influence_change_range, event_skip):
         nx.draw(graph, pos, with_labels=True, node_color=node_color, node_size=node_size, edge_color=edge_colors)
         nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
         
-        plt.pause(1.5)
-        iterate_helper(graph, influence_change_range)
-        if i % event_skip==1:
+        iterate_helper(graph, influence_change_range, weight_change_range)
+        
+        if i % event_skip==1: 
+            # running random event is intentionally after iterate_helper to give a chance to visualize changes
             print(f"Random event time! On step {i+1}")
             graph, pos = random_event_choice(graph, pos, 1)
+        plt.pause(1.5)
     plt.show()

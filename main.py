@@ -11,6 +11,7 @@ EDGE_PROBABILITY = 0.10 # probability of an edge between nodes in random graph
 NUM_ITERATIONS = 27 # number of iterations of color mixing to undergo
 EVENT_SKIPS = 5 # number of iterations between events
 INFLUENCE_CHANGE_RANGE = 0.5 # range of how much influence can change per iteration as a percentage
+WEIGHT_CHANGE_RANGE = 0.1
 
 # function that creates a random weighted graph
 def create_weighted_connected_random():
@@ -61,7 +62,7 @@ def main():
     print(f"Nodes in graph: {G.nodes}")
     assign_influence(G)
     assign_hex_values(G)
-    visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, EVENT_SKIPS)
+    visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, WEIGHT_CHANGE_RANGE, EVENT_SKIPS)
     
-# TODO add random events every XONSTANT iteration, add
+# TODO add random events every XONSTANT iteration
 main()

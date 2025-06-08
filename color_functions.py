@@ -1,6 +1,13 @@
 import random
 
 def weight_to_gray(weight):
+    try:
+        weight = float(weight)
+    except (ValueError, TypeError):
+        weight = 0.5  # fallback to mid-gray
+
+    # Clamp to [0, 1]
+    weight = max(0.0, min(1.0, weight))
     gray_level = int((1 - weight) * 255) #invert weight where 1 is black and 0 is white
     return f'#{gray_level:02x}{gray_level:02x}{gray_level:02x}'
 
