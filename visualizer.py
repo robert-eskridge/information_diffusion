@@ -42,7 +42,7 @@ def steal_influence(graph, node):
 def MCS_influence_change(graph):
     for _, data in graph.nodes(data = True):
         if data.get("MCS") == True:
-            data["influence"] *= random.uniform(1.15, 1.4)
+            data["influence"] *= random.uniform(1.15, 1.25)
 
 # helper function that mixes colors in graph
 def iterate_helper(graph, influence_change_range, weight_change_range):
@@ -97,6 +97,9 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
     fig = plt.gcf()
     fig.set_size_inches(10, 7)  # Adjust based on your screen resolution
     fig.tight_layout()
+    
+    last_event = 9999
+    
     for i in range(iterations):
         plt.clf()
         plt.title(f"Step {i+1} in graph iteration.")
@@ -121,7 +124,11 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
             # running random event is intentionally after iterate_helper to give a chance to visualize changes
             print(f"Random event time! On step {i+1}")
             nx.set_node_attributes(graph, False, "MCS") # reset MCS
-            #graph, pos = random_event_choice(graph, pos, random.choice([1,3]))
-            graph, pos = random_event_choice(graph, pos, 1)
+            new_event = random.choice([1,4])
+            while new_event==last_event:
+                new_event = random.choice([1,4])
+            graph, pos = random_event_choice(graph, pos, new_event)
+            #graph, pos = random_event_choice(graph, pos, 4)
+            last_event = new_event
         plt.pause(1.5)
     plt.show()

@@ -5,10 +5,10 @@ from color_functions import *
 from visualizer import *
 
 # PROGRAM CONSTANTS
-NUM_NODES = 16 # how many nodes to create in the graph
-SMALL_WORLD_NEIGHBORS = 4
+NUM_NODES = 20 # how many nodes to create in the graph
+SMALL_WORLD_NEIGHBORS = int(NUM_NODES/5)
 EDGE_PROBABILITY = 0.10 # probability of an edge between nodes in random graph
-NUM_ITERATIONS = 27 # number of iterations of color mixing to undergo
+NUM_ITERATIONS = 30 # number of iterations of color mixing to undergo
 EVENT_SKIPS = 5 # number of iterations between events
 INFLUENCE_CHANGE_RANGE = 0.5 # range of how much influence can change per iteration as a percentage
 WEIGHT_CHANGE_RANGE = 0.1

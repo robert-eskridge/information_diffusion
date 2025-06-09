@@ -20,26 +20,9 @@ def random_event_choice(graph, pos, event):
         plague(graph)
     if event==3:
         main_character_syndrome(graph)
+    if event==4:
+        city_rezoning(graph)
     return graph, pos
-
-#TODO give invaders an influence value they can conquer and choose a random grouping of neighbord under that value
-def invasion(graph, pos):
-    print("Invasion!")
-    nodes = list(graph.nodes)
-    num_invader_nodes = int(AFFECTED_NODE_PERCENTAGE*len(nodes))
-    rgb = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
-    hex_invaders = encode_to_hex(rgb)
-    
-    for i in range(num_invader_nodes):
-        invader_node = len(nodes)+i+1
-        graph.add_node(invader_node)
-        graph.nodes[invader_node]["hex_code"] = hex_invaders
-        graph.nodes[invader_node]["influence"] = 99
-        invaded_one, invaded_two = random.choice(list(graph.edges))
-        graph.add_edge(invader_node, invaded_one, weight=0.95, invader = True)
-        graph.add_edge(invader_node, invaded_two, weight=0.95, invader = True)
-    new_pos = nx.spring_layout(graph, pos=pos, fixed=pos.keys())
-    return graph, new_pos
 
 def invasion_capped(graph, pos):
     print("Invasion!")
@@ -50,11 +33,14 @@ def invasion_capped(graph, pos):
 
     all_influence = nx.get_node_attributes(graph, "influence")
     average_influence = int(sum(all_influence))
+    
+    list_invader_nodes = []
+    invaded = []
 
     for i in range(num_invader_nodes):
         invader_id = max(graph.nodes, default=-1)+1
+        list_invader_nodes.append(invader_id)
         graph.add_node(invader_id)
-        print(f"Invader id: {invader_id}")
         graph.nodes[invader_id]["hex_code"] = hex_invaders
         graph.nodes[invader_id]["influence"] = average_influence*2
         graph.nodes[invader_id]["invader"] = True
@@ -70,16 +56,22 @@ def invasion_capped(graph, pos):
         if random.uniform(-.25,1) < 0:
             print("Idiot invaders!")
             potential_targets.reverse()
-            print(f"First three targets: {potential_targets[:3]}")
+            #print(f"First three targets: {potential_targets[:3]}")
 
         for target in potential_targets:
             target_cost = graph.nodes[target]["influence"]
-            if target_cost <= remaining_budget:
+            if target_cost <= remaining_budget and target not in invaded:
                 graph.add_edge(invader_id, target, weight=0.95, invader=True)
-                print(f"Invaded {target} with influence cost {target_cost}!")
+                invaded.append(target)
+                #print(f"Invaded {target} with influence cost {target_cost}!")
                 remaining_budget -= target_cost
             if remaining_budget <= 0:
                 break
+    for i in range(len(list_invader_nodes)):
+                    for j in range (i+1, len(list_invader_nodes)):
+                        u, v = list_invader_nodes[i], list_invader_nodes[j]
+                        if not graph.has_edge(u, v):
+                            graph.add_edge(u, v, weight=.999)
     new_pos = nx.spring_layout(graph, pos=pos, fixed=pos.keys())
     return graph, new_pos
 
@@ -99,4 +91,15 @@ def main_character_syndrome(graph):
     mcs_attributes = {node: True for node in MCS_nodes}
     nx.set_node_attributes(graph, mcs_attributes, "MCS")
 
-    print(f"🌟 MCS applied to nodes: {MCS_nodes}")
+    print(f"MCS applied to nodes: {MCS_nodes}")
+    
+def city_rezoning(graph):
+    print("City rezoning!")
+
+    all_edges = list(graph.edges)
+    current_weights = [graph[u][v]["weight"] for u, v in all_edges]
+    random.shuffle(current_weights)
+
+    # Reassign shuffled weights to the edges
+    for (u, v), new_weight in zip(all_edges, current_weights):
+        graph[u][v]["weight"] = new_weight
