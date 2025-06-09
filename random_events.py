@@ -22,6 +22,8 @@ def random_event_choice(graph, pos, event):
         main_character_syndrome(graph)
     if event==4:
         city_rezoning(graph)
+    if event == 5:
+        pos = alien_abduction(graph, pos)
     return graph, pos
 
 def invasion_capped(graph, pos):
@@ -103,3 +105,32 @@ def city_rezoning(graph):
     # Reassign shuffled weights to the edges
     for (u, v), new_weight in zip(all_edges, current_weights):
         graph[u][v]["weight"] = new_weight
+        
+def alien_abduction(graph, pos):
+    print("Alien Abduction!")
+    nodes = list(graph.nodes)
+    num_abducted_nodes = int(AFFECTED_NODE_PERCENTAGE*len(nodes))
+    abducted_nodes = random.sample(nodes, min(num_abducted_nodes, len(nodes)))
+    for node in nodes:
+        if graph.nodes[node] in abducted_nodes:
+            neighbors = list(graph[node])
+            if neighbors:
+                for i in range(len(neighbors)):
+                    for j in range (i+1, len(neighbors)):
+                        u, v = neighbors[i], neighbors[j]
+                        if not graph.has_edge(u, v):
+                            average_weight = (graph.get_edge_data(node, neighbors[i])["weight"] + graph.get_edge_data(node, neighbors[j])["weight"])/2
+                            graph.add_edge(u, v, weight=round(average_weight, 3))
+                            
+                dead_influence = graph.nodes[node]["influence"]
+                weights = [random.random() for _ in neighbors]  # Random weights
+                total = sum(weights)
+                proportions = [w / total for w in weights]      # Normalize
+
+                for neighbor, share in zip(neighbors, proportions):
+                    gain = share * dead_influence
+                    graph.nodes[neighbor]["influence"] += gain
+                    
+    graph.remove_nodes_from(abducted_nodes)
+    pos = nx.spring_layout(graph, pos=pos, fixed=graph.nodes)
+    return pos

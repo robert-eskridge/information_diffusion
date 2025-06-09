@@ -124,11 +124,11 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
             # running random event is intentionally after iterate_helper to give a chance to visualize changes
             print(f"Random event time! On step {i+1}")
             nx.set_node_attributes(graph, False, "MCS") # reset MCS
-            new_event = random.choice([1,4])
+            new_event = random.choice([1,5])
             while new_event==last_event:
-                new_event = random.choice([1,4])
+                new_event = random.choice([1,5])
             graph, pos = random_event_choice(graph, pos, new_event)
-            #graph, pos = random_event_choice(graph, pos, 4)
+            #graph, pos = random_event_choice(graph, pos, 5)
             last_event = new_event
         plt.pause(1.5)
     plt.show()

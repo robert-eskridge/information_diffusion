@@ -64,5 +64,4 @@ def main():
     assign_hex_values(G)
     visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, WEIGHT_CHANGE_RANGE, EVENT_SKIPS)
     
-# TODO add more random events
 main()
