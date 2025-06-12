@@ -35,8 +35,29 @@ def murder_machine(graph, pos):
     pos = nx.spring_layout(graph, pos=pos, fixed=graph.nodes)
     return pos
 
-def steal_influence(graph, node):
-    neighbors = graph[node]
+def steal_influence(graph):
+    print("Beginning to steal influence!")
+    new_influence = {}
+
+    for node in graph.nodes:
+        current_influence = graph.nodes[node]["influence"]
+        influence_gain = 0
+        influence_loss = {}
+
+        for neighbor in graph[node]:
+            neighbor_influence = graph.nodes[neighbor]["influence"]
+            if neighbor_influence > 2 * current_influence:
+                influence_gain += current_influence * 0.1  # Node gains 10%
+                influence_loss[neighbor] = influence_loss.get(neighbor, 0) + neighbor_influence * 0.09  # Neighbor loses 9%
+
+        new_influence[node] = current_influence + influence_gain
+
+        for n, loss in influence_loss.items():
+            new_influence[n] = graph.nodes[n]["influence"] - loss
+
+    # Apply updates after all calculations
+    for node, influence in new_influence.items():
+        graph.nodes[node]["influence"] = round(max(influence, 0), 3)  # Ensure influence is not negative
 
 # function specifically for MCS nodes to make their influence bigger for the MCS event duration
 def MCS_influence_change(graph):
@@ -118,6 +139,7 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
         
         iterate_helper(graph, influence_change_range, weight_change_range)
         MCS_influence_change(graph)
+        steal_influence(graph)
         pos = murder_machine(graph, pos)
         
         if i % event_skip==1: 
@@ -127,8 +149,8 @@ def visualize_graph(graph, pos, iterations, influence_change_range, weight_chang
             new_event = random.choice([1,5])
             while new_event==last_event:
                 new_event = random.choice([1,5])
-            graph, pos = random_event_choice(graph, pos, new_event)
-            #graph, pos = random_event_choice(graph, pos, 5)
+            #graph, pos = random_event_choice(graph, pos, new_event)
+            graph, pos = random_event_choice(graph, pos, 6)
             last_event = new_event
         plt.pause(1.5)
     plt.show()

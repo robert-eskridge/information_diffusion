@@ -1,5 +1,4 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 import random
 from color_functions import *
 from visualizer import *
@@ -35,6 +34,12 @@ def create_small_world_graph():
     pos = nx.spring_layout(G)
     return G, pos
 
+def create_scale_free_graph():
+    G = nx.barabasi_albert_graph(NUM_NODES, m=2)  # m = edges to attach per new node
+    nx.set_edge_attributes(G, {e: {'weight': round(random.uniform(0.1, 1.0), 3)} for e in G.edges})
+    pos = nx.spring_layout(G)
+    return G, pos
+
 # function that assigns random hex code RGB values to every node in the graph
 def assign_hex_values(graph):
     values = {}
@@ -54,11 +59,13 @@ def assign_influence(graph):
     print(f"Values for influence: {values}")
 
 def main():
-    selection = int(input("1: erdos renyi \n2: small world\n"))
+    selection = int(input("1: erdos renyi \n2: small world\n3: scale free graph\n"))
     if selection==1:   
         G, pos = create_weighted_connected_random()
     elif selection==2:
         G, pos = create_small_world_graph()
+    elif selection == 3:
+        G, pos = create_scale_free_graph()
     print(f"Nodes in graph: {G.nodes}")
     assign_influence(G)
     assign_hex_values(G)

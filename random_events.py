@@ -12,18 +12,22 @@ INVADER_INFLUENCE_CAP = 150
 # 3: MCS (main character syndrome): 1/8 of current nodes have their influence increased every iteration until next event
 # 4: City rezoning: Weights are redone with new random values
 # 5: Alien Abduction: 1/8 of total nodes are removed from graph
+# 6: Great Flood: Create MST and wipe away other weights
+# 7: Prosperous Trade: add one edge to each node, unless at max, in which case multiply each edge by 1.25
 
 def random_event_choice(graph, pos, event):
-    if event==1:
+    if event == 1:
         graph, pos = invasion_capped(graph, pos)
-    if event==2:
+    if event == 2:
         plague(graph)
-    if event==3:
+    if event == 3:
         main_character_syndrome(graph)
-    if event==4:
+    if event == 4:
         city_rezoning(graph)
     if event == 5:
         pos = alien_abduction(graph, pos)
+    if event == 6:
+        prosperous_trade(graph)
     return graph, pos
 
 def invasion_capped(graph, pos):
@@ -97,11 +101,9 @@ def main_character_syndrome(graph):
     
 def city_rezoning(graph):
     print("City rezoning!")
-
     all_edges = list(graph.edges)
     current_weights = [graph[u][v]["weight"] for u, v in all_edges]
     random.shuffle(current_weights)
-
     # Reassign shuffled weights to the edges
     for (u, v), new_weight in zip(all_edges, current_weights):
         graph[u][v]["weight"] = new_weight
@@ -134,3 +136,17 @@ def alien_abduction(graph, pos):
     graph.remove_nodes_from(abducted_nodes)
     pos = nx.spring_layout(graph, pos=pos, fixed=graph.nodes)
     return pos
+
+def prosperous_trade(graph):
+    nodes = list(graph.nodes)
+    for node in nodes:
+        neighbors = list(graph[node])
+        if len(neighbors)>=len(nodes)-1:
+            continue
+        new_neighbor = random.choice(nodes)
+        #new_node = new_neighbor[0]
+        while new_neighbor in neighbors or node == new_neighbor:
+            new_neighbor = random.choice(nodes)
+        u, v = node, new_neighbor
+        print(f"Node: {node}, U: {u}, Neighbor: {new_neighbor}, V: {v}")
+        graph.add_edge(u, v, weight=0.5)
