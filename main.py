@@ -58,6 +58,14 @@ def assign_influence(graph):
     nx.set_node_attributes(graph, values, "influence")
     print(f"Values for influence: {values}")
 
+def assign_stubborn(graph):
+    values = {}
+    for node in graph.nodes:
+        stubborn = random.randint(0,100)
+        values[node] = stubborn
+    nx.set_node_attributes(graph, values, "stubborn")
+    print(f"Values for stubborn: {values}")
+
 def main():
     selection = int(input("1: erdos renyi \n2: small world\n3: scale free graph\n"))
     if selection==1:   
@@ -69,6 +77,7 @@ def main():
     print(f"Nodes in graph: {G.nodes}")
     assign_influence(G)
     assign_hex_values(G)
+    assign_stubborn(G)
     visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, WEIGHT_CHANGE_RANGE, EVENT_SKIPS)
     
 main()

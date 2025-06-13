@@ -49,6 +49,7 @@ def invasion_capped(graph, pos):
         graph.add_node(invader_id)
         graph.nodes[invader_id]["hex_code"] = hex_invaders
         graph.nodes[invader_id]["influence"] = average_influence*2
+        graph.nodes[invader_id]["stubborn"] = 95
         graph.nodes[invader_id]["invader"] = True
 
         remaining_budget = average_influence*1.5
@@ -138,8 +139,11 @@ def alien_abduction(graph, pos):
     return pos
 
 def prosperous_trade(graph):
+    print("Trade prospers!")
     nodes = list(graph.nodes)
-    for node in nodes:
+    num_nodes_with_trade = int(AFFECTED_NODE_PERCENTAGE*len(nodes)*2)
+    trade_nodes = random.sample(nodes, min(num_nodes_with_trade, len(nodes)))
+    for node in trade_nodes:
         neighbors = list(graph[node])
         if len(neighbors)>=len(nodes)-1:
             continue
@@ -148,5 +152,14 @@ def prosperous_trade(graph):
         while new_neighbor in neighbors or node == new_neighbor:
             new_neighbor = random.choice(nodes)
         u, v = node, new_neighbor
-        print(f"Node: {node}, U: {u}, Neighbor: {new_neighbor}, V: {v}")
-        graph.add_edge(u, v, weight=0.5)
+        
+        def average_edge_weight(n):
+            edges = graph.edges(n, data="weight")
+            weights = [data for _, _, data in edges if data is not None]
+            return sum(weights) / len(weights) if weights else 1.0  # default to 1.0 if no edges
+
+        avg_u = average_edge_weight(u)
+        avg_v = average_edge_weight(v)
+        print(f"Average for node: {avg_u}. Avg for new neighbor: {avg_v}")
+        avg_weight = round((avg_u + avg_v) / 2, 3)
+        graph.add_edge(u, v, weight=avg_weight)
