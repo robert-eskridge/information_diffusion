@@ -4,8 +4,40 @@ import random
 from visual_helpers import *
 from random_events import random_event_choice
 from pyvis.network import Network
-    
 
+from pyvis.network import Network
+
+def visualize_large_graph(graph):
+    net = Network(height="800px", width="100%", bgcolor="#222222", font_color="white")
+
+    # Optional: For physics animation on layout
+    net.barnes_hut()
+
+    for node, data in graph.nodes(data=True):
+        influence = data.get("influence", 1)
+        color = data.get("hex_code", "#888888")
+        stubborn = data.get("stubborn", 0)
+
+        net.add_node(
+            node,
+            label=str(node),
+            title=f"Influence: {influence}<br>Stubbornness: {stubborn}",
+            color=color,
+            size=max(influence, 5)  # Prevent invisible nodes
+        )
+
+    for u, v, data in graph.edges(data=True):
+        weight = data.get("weight", 1)
+        net.add_edge(
+            u,
+            v,
+            value=weight,
+            title=f"Weight: {weight:.2f}"
+        )
+
+    net.show("diffusion.html", notebook=False)
+    
+#TODO refactor this into pyvis network instead of matplotlib
 def visualize_graph(graph, pos, iterations, influence_change_range, weight_change_range, event_skip):
     print("Visualizing graph!")
     

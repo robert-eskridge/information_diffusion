@@ -78,6 +78,7 @@ def main():
     assign_influence(G)
     assign_hex_values(G)
     assign_stubborn(G)
-    visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, WEIGHT_CHANGE_RANGE, EVENT_SKIPS)
+    visualize_large_graph(G)
+    #visualize_graph(G, pos, NUM_ITERATIONS, INFLUENCE_CHANGE_RANGE, WEIGHT_CHANGE_RANGE, EVENT_SKIPS)
     
 main()
